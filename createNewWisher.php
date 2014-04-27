@@ -1,8 +1,5 @@
 <?php
-$dbHost = "sql201.byethost7.com";
-$dbXeHost = "sql201.byethost7.com/XE";
-$dbUsername = "b7_10443524";
-$dbPassword = "ngunhubo";
+require_once ("includes/db.php");
 
 $UsernameIsUnique = true;
 $passwordIsValid = true;
@@ -10,21 +7,34 @@ $UserIsEmpty = false;
 $passwordIsEmpty = false;
 $password2IsEmpty = false;
 
+//check empty user
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($_POST["user"] == "") {
         $UserIsEmpty = true;
     }
-    
-    $con = mysqli_connect($dbHost, $dbUsername, $dbPassword);
-    if (!$con) {
-        exit('Connect Error (' . mysqli_connect_errno() . ') '
-                . mysqli_connect_error());
+
+   $wisherID = WishDB::getInstance()->get_wisher_id_by_name($_POST["user"]);
+   if ($wisherID) {
+       $UsernameIsUnique = false;
+   }
+
+    //check password fields
+    if ($_POST["password"] == "") {
+        $passwordIsEmpty = true;
     }
-    mysqli_set_charset($con, 'utf-8');
-    
-    mysqli_select_db($con, "b7_10443524_wishlist");
-    mysqli_real_escape_string($con, $_POST["user"]);
-     
+    if ($_POST["password2"] == "") {
+        $password2IsEmpty = true;
+    }
+    if ($_POST["password"] != $_POST["password2"]) {
+        $passwordIsValid = false;
+    }
+
+    //requirements met, insert to DB
+    if (!$UserIsEmpty && $UsernameIsUnique && !$passwordIsEmpty && !$password2IsEmpty && $passwordIsValid) {
+        WishDB::getInstance()->create_wisher($_POST["user"], $_POST["password"]);
+        header('Location: editWishList.php');
+        exit;
+    }
 }
 ?>
 
@@ -43,8 +53,29 @@ and open the template in the editor.
         Welcome!<br>
         <form action="createNewWisher.php" method="POST">
             Your name: <input type="text" name="user"/><br/>
+            <?php
+            if ($UserIsEmpty) {
+                echo ("Enter username!!!<br/>");
+            }
+            ?>
             Password: <input type="password" name="password"/><br/>
+            <?php
+            if ($passwordIsEmpty) {
+                echo ("Enter the password, please!");
+                echo ("<br/>");
+            }
+            ?>
             Please confirm your password: <input type="password" name="password2"/><br/>
+            <?php
+            if ($password2IsEmpty) {
+                echo ("Confirm your password, please");
+                echo ("<br/>");
+            }
+            if (!$password2IsEmpty && !$passwordIsValid) {
+                echo ("The passwords do not match!");
+                echo ("<br/>");
+            }
+            ?>
             <input type="submit" value="Register"/>
         </form>
     </body>
