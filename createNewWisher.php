@@ -32,6 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     //requirements met, insert to DB
     if (!$UserIsEmpty && $UsernameIsUnique && !$passwordIsEmpty && !$password2IsEmpty && $passwordIsValid) {
         WishDB::getInstance()->create_wisher($_POST["user"], $_POST["password"]);
+        session_start();
+        $_SESSION["user"] = $_POST["user"];
         header('Location: editWishList.php');
         exit;
     }
